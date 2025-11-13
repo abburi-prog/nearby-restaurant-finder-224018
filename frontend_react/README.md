@@ -9,6 +9,7 @@ Provide through `.env` (do not commit secrets):
 - REACT_APP_API_BASE or REACT_APP_BACKEND_URL: Backend base URL (e.g., http://localhost:3001)
 - REACT_APP_FRONTEND_URL: Frontend origin for backend CORS (e.g., http://localhost:3000)
 - REACT_APP_GOOGLE_MAPS_API_KEY (optional): Enables interactive Google Map. If omitted, a static map fallback is shown.
+- REACT_APP_FORCE_INDIA_DEFAULTS=true|false (optional): When true (default), the app ignores browser geolocation and centers searches on Delhi, India, sending region=IN and language=en-IN to the backend.
 
 ## Run
 

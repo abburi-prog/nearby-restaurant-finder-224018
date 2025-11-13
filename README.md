@@ -5,7 +5,8 @@ Two-container app:
 - Backend: FastAPI (port 3001)
 
 Features:
-- Geolocation-based search
+- India-default search (Delhi) with region bias "IN" and language "en-IN" (geolocation ignored by default)
+- Geolocation-based search can be re-enabled by setting REACT_APP_FORCE_INDIA_DEFAULTS=false
 - Google Places proxy on backend (Nearby Search, Place Details)
 - Map with markers (Google Maps interactive if key provided; otherwise static fallback)
 - List and details panels
@@ -19,14 +20,14 @@ Frontend (.env):
 - REACT_APP_GOOGLE_MAPS_API_KEY=optional for interactive map
 
 Backend (.env):
-- GOOGLE_MAPS_API_KEY=server-side key (required)
+- (none required for sample; no external API keys needed)
 - REACT_APP_FRONTEND_URL=http://localhost:3000
 
 ## Run
 
 Backend:
 - cd nearby-restaurant-finder-224019/backend
-- pip install -r requirements.txt
+- pip install fastapi uvicorn pydantic
 - uvicorn main:app --host 0.0.0.0 --port 3001
 
 Frontend:

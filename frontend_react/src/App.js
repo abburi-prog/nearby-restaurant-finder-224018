@@ -19,6 +19,15 @@ const theme = {
 
 const API_BASE = process.env.REACT_APP_API_BASE || process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
 
+// Feature flag: Force India (Delhi) defaults regardless of geolocation.
+// Defaults to true unless explicitly set to 'false'.
+const FORCE_INDIA_DEFAULTS = String(process.env.REACT_APP_FORCE_INDIA_DEFAULTS || 'true').toLowerCase() !== 'false';
+
+// Canonical Delhi coordinates and locale bias for India.
+const INDIA_DEFAULT_COORDS = { lat: 28.6139, lng: 77.2090 };
+const INDIA_REGION = 'IN';
+const INDIA_LANGUAGE = 'en-IN';
+
 /**
  * Helpers
  */
@@ -84,7 +93,7 @@ function Header() {
       <div style={{maxWidth: 1200, margin: '0 auto', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
         <div style={{display: 'flex', alignItems: 'center', gap: 12}}>
           <div style={{width: 36, height: 36, borderRadius: 8, background: theme.colors.primary, boxShadow: theme.shadow}} />
-          <h1 style={{margin: 0, fontSize: 20, color: theme.colors.text}}>Nearby Restaurant Finder</h1>
+          <h1 style={{margin: 0, fontSize: 20, color: theme.colors.text}}>Nearby Restaurant Finder — India Defaults</h1>
         </div>
       </div>
       <div style={{height: 4, background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})`}} />
@@ -262,7 +271,7 @@ function MapView({ userLocation, restaurants, selected, onSelect }) {
   }, [googleLoaded, userLocation, restaurants, onSelect]);
 
   if (!userLocation) {
-    return <div style={{height: '100%', display: 'grid', placeItems: 'center'}}>Awaiting location permission...</div>;
+    return <div style={{height: '100%', display: 'grid', placeItems: 'center'}}>Centering on Delhi, India…</div>;
   }
 
   if (googleLoaded) {
@@ -296,18 +305,27 @@ function App() {
   const [restaurants, setRestaurants] = useState([]);
   const [selected, setSelected] = useState(null);
 
-  // Geolocation on mount
+  // Location initialization on mount
   useEffect(() => {
-    if (!navigator.geolocation) {
-      setError('Geolocation is not supported by your browser.');
+    // If forcing India defaults, skip geolocation entirely and set Delhi.
+    if (FORCE_INDIA_DEFAULTS) {
+      setUserLocation(INDIA_DEFAULT_COORDS);
+      setError('Using India defaults (Delhi).');
       return;
     }
+
+    // Otherwise, attempt browser geolocation with fallback to Delhi.
+    if (!navigator.geolocation) {
+      setError('Geolocation is not supported by your browser. Using India defaults (Delhi).');
+      setUserLocation(INDIA_DEFAULT_COORDS);
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => {
-        setError('Permission denied. Using default location.');
-        // Fallback to a central location (e.g., New York City)
-        setUserLocation({ lat: 40.758, lng: -73.9855 });
+        setError('Location permission denied. Using India defaults (Delhi).');
+        setUserLocation(INDIA_DEFAULT_COORDS);
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
@@ -325,7 +343,9 @@ function App() {
           lat: userLocation.lat,
           lng: userLocation.lng,
           radius: Math.max(1, Math.min(50000, Number.isFinite(radius) ? radius : 1500)),
-          keyword: keyword?.trim() || undefined
+          keyword: keyword?.trim() || undefined,
+          region: INDIA_REGION,
+          language: INDIA_LANGUAGE
         })
       });
       if (!r.ok) {
@@ -373,7 +393,7 @@ function App() {
           <div style={{...layoutStyles.card, padding: 12, height: '70vh', overflow: 'auto'}}>
             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 6px 10px'}}>
               <div style={{fontWeight: 700, color: theme.colors.text}}>Results</div>
-              {loading ? <div style={{color: '#6b7280'}}>Loading…</div> : <div style={{color: '#6b7280'}}>{restaurants.length} found</div>}
+              {loading ? <div style={{color: '#6b7280'}}>Loading…</div> : <div style={{color: '#6b7280'}}>{restaurants.length} found (centered on Delhi, IN)</div>}
             </div>
             <RestaurantList items={restaurants} onSelect={setSelected} userLocation={userLocation} />
           </div>
